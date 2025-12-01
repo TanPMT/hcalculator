@@ -1,0 +1,151 @@
+@page "/calculator"
+@rendermode InteractiveServer
+
+<PageTitle>Calculator</PageTitle>
+
+<div class="calculator-container">
+    <div class="calculator">
+        <div class="display">
+            @displayValue
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-clear" @onclick="Clear">C</button>
+            <button class="btn btn-operator" @onclick='() => HandleOperator("/")'>/</button>
+            <button class="btn btn-operator" @onclick='() => HandleOperator("*")'>×</button>
+            <button class="btn btn-operator" @onclick="DeleteLast">←</button>
+            
+            <button class="btn btn-number" @onclick='() => HandleNumber("7")'>7</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber("8")'>8</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber("9")'>9</button>
+            <button class="btn btn-operator" @onclick='() => HandleOperator("-")'>-</button>
+            
+            <button class="btn btn-number" @onclick='() => HandleNumber("4")'>4</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber("5")'>5</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber("6")'>6</button>
+            <button class="btn btn-operator" @onclick='() => HandleOperator("+")'>+</button>
+            
+            <button class="btn btn-number" @onclick='() => HandleNumber("1")'>1</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber("2")'>2</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber("3")'>3</button>
+            <button class="btn btn-equals" @onclick="Calculate">=</button>
+            
+            <button class="btn btn-number btn-zero" @onclick='() => HandleNumber("0")'>0</button>
+            <button class="btn btn-number" @onclick='() => HandleNumber(".")'>.</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string displayValue = "0";
+    private string currentValue = "";
+    private string previousValue = "";
+    private string currentOperator = "";
+    private bool shouldResetDisplay = false;
+
+    private void HandleNumber(string number)
+    {
+        if (shouldResetDisplay)
+        {
+            displayValue = "";
+            shouldResetDisplay = false;
+        }
+
+        if (displayValue == "0" && number != ".")
+        {
+            displayValue = number;
+        }
+        else if (number == "." && displayValue.Contains("."))
+        {
+            return; // Không thêm dấu . thứ hai
+        }
+        else
+        {
+            displayValue += number;
+        }
+        
+        currentValue = displayValue;
+    }
+
+    private void HandleOperator(string op)
+    {
+        if (!string.IsNullOrEmpty(currentOperator) && !shouldResetDisplay)
+        {
+            Calculate();
+        }
+
+        previousValue = displayValue;
+        currentOperator = op;
+        shouldResetDisplay = true;
+    }
+
+    private void Calculate()
+    {
+        if (string.IsNullOrEmpty(previousValue) || string.IsNullOrEmpty(currentOperator))
+            return;
+
+        try
+        {
+            double prev = double.Parse(previousValue);
+            double current = double.Parse(currentValue);
+            double result = 0;
+
+            switch (currentOperator)
+            {
+                case "+":
+                    result = prev + current;
+                    break;
+                case "-":
+                    result = prev - current;
+                    break;
+                case "*":
+                    result = prev * current;
+                    break;
+                case "/":
+                    if (current != 0)
+                        result = prev / current;
+                    else
+                    {
+                        displayValue = "Error";
+                        Clear();
+                        return;
+                    }
+                    break;
+            }
+
+            displayValue = result.ToString();
+            currentValue = displayValue;
+            previousValue = "";
+            currentOperator = "";
+            shouldResetDisplay = true;
+        }
+        catch
+        {
+            displayValue = "Error";
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        displayValue = "0";
+        currentValue = "";
+        previousValue = "";
+        currentOperator = "";
+        shouldResetDisplay = false;
+    }
+
+    private void DeleteLast()
+    {
+        if (displayValue.Length > 1)
+        {
+            displayValue = displayValue.Substring(0, displayValue.Length - 1);
+            currentValue = displayValue;
+        }
+        else
+        {
+            displayValue = "0";
+            currentValue = "";
+        }
+    }
+}
