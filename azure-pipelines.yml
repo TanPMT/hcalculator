@@ -1,16 +1,18 @@
-trigger:
-- main
-
-pool:
-  vmImage: 'ubuntu-latest'
+variables:
+  buildConfiguration: 'Release'
 
 steps:
-- script: dotnet publish --configuration Release --output $(Build.ArtifactStagingDirectory)
-  displayName: 'Build and Publish'
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'dotnet build $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
 
 - task: AzureWebApp@1
   inputs:
     azureSubscription: 'hcalculator-SC'
     appType: 'webAppLinux'
     appName: 'hcalculator'
-    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
