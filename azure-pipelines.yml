@@ -1,18 +1,27 @@
+pool:
+  name: selfhost
+  demands:
+  - Agent.Name -equals pipe
+
 variables:
   buildConfiguration: 'Release'
 
 steps:
 - script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
+  displayName: '1. Build Project'
 
 - task: DotNetCoreCLI@2
+  displayName: '2. Publish Project to Staging'
   inputs:
     command: 'publish'
     publishWebProjects: true
+    zipAfterPublish: true
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
 
 - task: AzureWebApp@1
+  displayName: '3. Deploy Web App to hcalculator (Linux)'
   inputs:
     azureSubscription: 'hcalculator-SC'
     appType: 'webAppLinux'
     appName: 'hcalculator'
-    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
